@@ -3,42 +3,30 @@ using namespace std;
 
 using ii = pair<int, int>;
 
-int n;
-vector<ii> v;
-vector<bool> visited;
+const int MAXN = 100010;
 
-void visitLis(vector<int>& parent, int u) {
-    if(parent[u] != -1) {
-        visitLis(parent, parent[u]);
-    }
-    visited[u] = true;
-}
+int n;
+ii v[MAXN];
+int lis[MAXN];
 
 int findLis() {
-    vector<int> lis, lisId, parent = vector<int>(n);
+    int lisSize = 0;
+    lis[lisSize++] = v[0].second;
 
-    for(int i=0; i<n; i++) {
-        if(visited[i]) {
-            continue;
+    for(int i=1; i<n; i++) {
+        if(v[i].second > lis[0]) {
+            lis[0] = v[i].second;
         }
-
-        int pos = lower_bound(lis.begin(), lis.end(), v[i].second) - lis.begin();
-
-        if(pos < (int)lis.size()) {
-            lis[pos] = v[i].second;
-            lisId[pos] = i;
+        else if(v[i].second <= lis[lisSize-1]) {
+            lis[lisSize++] = v[i].second;
         }
         else {
-            lis.push_back(v[i].second);
-            lisId.push_back(i);
+            int pos = upper_bound(lis, lis+lisSize, v[i].second, greater<int>()) - lis;
+            lis[pos] = v[i].second;
         }
-
-        parent[i] = pos ? lisId[pos-1] : -1;
     }
 
-    visitLis(parent, lisId[ (int)lisId.size()-1 ]);
-
-    return (int)lis.size();
+    return lisSize;
 }
 
 bool sortfn(const ii& a, const ii& b) {
@@ -54,19 +42,11 @@ int main() {
     while(t--) {
         scanf("%d", &n);
 
-        v = vector<ii>(n);
-        visited = vector<bool>(n, false);
-
         for(int i=0; i<n; i++) {
             scanf("%d %d", &v[i].first, &v[i].second);
         }
-        sort(v.begin(), v.end(), sortfn);
+        sort(v, v+n, sortfn);
 
-        int removed = 0, iterations = 0;
-        while(removed < n) {
-            removed += findLis();
-            iterations++;
-        }
-        printf("%d\n", iterations);
+        printf("%d\n", findLis());
     }
 }

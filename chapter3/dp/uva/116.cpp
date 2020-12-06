@@ -51,6 +51,7 @@ int main() {
         memset(visi, false, sizeof(visi));
 
         int startRow = 0;
+        solve(startRow, 0);
         for(int i=1; i<rows; i++) {
             if(solve(i, 0) < solve(startRow, 0)) {
                 startRow = i;

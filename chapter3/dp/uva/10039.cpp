@@ -11,7 +11,7 @@ int cities;
 char cityName[MAXC][128];
 
 int trains;
-vector<ii> train[MAXT]; // moment, city
+vector<pair<int, ii> > train[MAXT]; // moment, city, cityStop
 
 vector<pair<int, ii> > cityTimeline[MAXC]; // moment, train, trainStop
 
@@ -38,10 +38,22 @@ int solve(int city, int stop, int goal) {
 
     // stay on the current train.
     if(cityTimeline[city][stop].second.second+1 < (int)train[ cityTimeline[city][stop].second.first ].size()) {
-        // ans = solve(
-        //     train[ cityTimeline[city][stop].second.second+1 ].second,
-        // );
+        ans = solve(
+            train[ cityTimeline[city][stop].second.first ][ cityTimeline[city][stop].second.second+1 ].second.first,
+            train[ cityTimeline[city][stop].second.first ][ cityTimeline[city][stop].second.second+1 ].second.second,
+            goal
+        );
     }
+
+    // hop to the next train.
+    if(stop+1 < (int)cityTimeline[city].size()) {
+        ans = min(
+            ans,
+            solve(city, stop+1, goal)
+        );
+    }
+
+    return ans;
 }
 
 int main() {
@@ -62,19 +74,23 @@ int main() {
             int k;
             scanf("%d", &k);
 
-            train[i] = vector<ii>(k);
+            train[i] = vector<pair<int, ii> >(k);
             for(int j=0; j<k; j++) {
                 char aux[128];
                 scanf("%d %s", &train[i][j].first, aux);
 
-                train[i][j].second = getCity(aux);
+                train[i][j].second.first = getCity(aux);
 
-                cityTimeline[ train[i][j].second ].push_back({train[i][j].first, {i, j}});
+                cityTimeline[ train[i][j].second.first ].push_back({train[i][j].first, {i, j}});
             }
         }
 
         for(int i=0; i<cities; i++) {
             sort(cityTimeline[i].begin(), cityTimeline[i].end());
+
+            for(int j=0; j<(int)cityTimeline[i].size(); j++) {
+                train[ cityTimeline[i][j].second.first ][ cityTimeline[i][j].second.second ].second.second = j;
+            }
         }
 
         int startTime;
@@ -90,9 +106,13 @@ int main() {
 
         ii ans = {INF, INF};
         for(int i=0; i<(int)cityTimeline[startCityId].size(); i++) {
+            if(cityTimeline[startCityId][i].first < startTime) {
+                continue;
+            }
+
             ans = min(
                 ans,
-                {solve(startCityId, i, endCityId), cityTimeline[startCityId][i].first}
+                {solve(startCityId, i, endCityId), -cityTimeline[startCityId][i].first}
             );
         }
 
@@ -101,7 +121,7 @@ int main() {
             printf("No connection\n");
         }
         else {
-            printf("Departure %04d %s\n", ans.second, startCity);
+            printf("Departure %04d %s\n", -ans.second, startCity);
             printf("Arrival   %04d %s\n", ans.first, endCity);
         }
         printf("\n");
